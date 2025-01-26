@@ -1,6 +1,12 @@
 name: "Release Plugin"
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        default: '8.16.1'
 
 jobs:
   release_plugin:
@@ -12,14 +18,14 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         repository: elastic/kibana
         ref: refs/heads/main
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
-        name: miguedep/kibana-prometheus-exporter
+        name: lht-poc/platform-monitoring-kibana-prometheus-exporter
         ref: refs/heads/main
         path: 'plugins/kibana-prometheus-exporter'
 
@@ -40,15 +46,15 @@ jobs:
       
     - name: Build plugin
       working-directory: plugins/kibana-prometheus-exporter
-      run: echo "8.16.1" | yarn build
+      run: echo "${{ github.event.inputs.version }}" | yarn build
     
     - name: Create checksum manifest
       working-directory: plugins/kibana-prometheus-exporter/build
       run: ../utils/checksum ./*.zip >checksum.json
 
-    - name: Create release notes
+    - name: Update and copy RELEASE_TEMPLATE.md
       working-directory: plugins/kibana-prometheus-exporter
-      run: cp ./utils/RELEASE_TEMPLATE.md ./build && ./utils/create_release_template ./build/RELEASE_TEMPLATE.md
+      run: sed "s/VERSION/${{ github.event.inputs.version }}/g" ./utils/RELEASE_TEMPLATE.md > ./build/RELEASE_TEMPLATE.md
 
     - name: Sanity Check
       working-directory: plugins/kibana-prometheus-exporter/build
@@ -60,8 +66,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: 8.16.1
-        release_name: 8.16.1
+        tag_name: "${{ github.event.inputs.version }}"
+        release_name: "${{ github.event.inputs.version }}"
         body_path: plugins/kibana-prometheus-exporter/build/RELEASE_TEMPLATE.md
         draft: true
         prerelease: false
@@ -73,8 +79,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: plugins/kibana-prometheus-exporter/build/kibanaPrometheusExporter-8.16.1.zip
-        asset_name: kibanaPrometheusExporter-8.16.1.zip
+        asset_path: plugins/kibana-prometheus-exporter/build/kibanaPrometheusExporter-${{ github.event.inputs.version }}.zip
+        asset_name: kibanaPrometheusExporter-${{ github.event.inputs.version }}.zip
         asset_content_type: application/zip
 
     - name: Upload release artifact (Checksum manifest)
