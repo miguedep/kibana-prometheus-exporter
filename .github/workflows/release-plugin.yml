@@ -19,7 +19,7 @@ jobs:
 
     - uses: actions/checkout@v2
       with:
-        name: pjhampton/kibana-prometheus-exporter
+        name: miguedep/kibana-prometheus-exporter
         ref: refs/heads/main
         path: 'plugins/kibana-prometheus-exporter'
 
@@ -40,7 +40,7 @@ jobs:
       
     - name: Build plugin
       working-directory: plugins/kibana-prometheus-exporter
-      run: echo "8.2.0" | yarn build
+      run: echo "8.17.1" | yarn build
     
     - name: Create checksum manifest
       working-directory: plugins/kibana-prometheus-exporter/build
@@ -60,8 +60,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: 8.2.0
-        release_name: 8.2.0
+        tag_name: 8.17.1
+        release_name: 8.17.1
         body_path: plugins/kibana-prometheus-exporter/build/RELEASE_TEMPLATE.md
         draft: true
         prerelease: false
@@ -73,8 +73,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: plugins/kibana-prometheus-exporter/build/kibanaPrometheusExporter-8.2.0.zip
-        asset_name: kibanaPrometheusExporter-8.2.0.zip
+        asset_path: plugins/kibana-prometheus-exporter/build/kibanaPrometheusExporter-8.17.1.zip
+        asset_name: kibanaPrometheusExporter-8.17.1.zip
         asset_content_type: application/zip
 
     - name: Upload release artifact (Checksum manifest)
